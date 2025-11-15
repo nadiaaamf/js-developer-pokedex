@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes do Pokémon</title>
+  
+  <!-- Normalize CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+      integrity="sha512-NhSC1YmyruXifcj/KFRWoC561YpHpc5Jtzgvbuzx5VozKpWvQ+4nXhPdFgmx8xqexRcpAglTj9sIBWINXa8x5w=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Font Roboto -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500;700&display=swap" rel="stylesheet">
+
+  <!-- Nosso CSS -->
+  <link rel="stylesheet" href="./css/global.css">
+  <link rel="stylesheet" href="./css/pokedex.css">
+</head>
+<body>
+  
+  <section class="content detail-page">
+    <button class="back-button" onclick="window.history.back()">← Voltar</button>
+    <div id="pokemonDetailContent">
+      <h1>Carregando...</h1>
+    </div>
+  </section>
+
+  <script src="./js/pokemon-model.js"></script>
+  <script src="./js/poke-api.js"></script>
+  <script src="./js/main.js"></script>
+  <script>
+    async function loadPokemonDetail() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+
+      console.log('ID recebido:', id);
+
+      if (!id) {
+        document.getElementById("pokemonDetailContent").innerHTML = 
+          '<h1>Pokémon não encontrado</h1>';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        const data = await response.json();
+
+        console.log('Dados do pokemon:', data);
+
+        const types = data.types.map(t => t.type.name);
+        const mainType = types[0];
+
+        const html = `
+          <div class="pokemon-detail ${mainType}">
+            <h1>${data.name} <span class="number">#${data.id}</span></h1>
+            
+            <ol class="types">
+              ${types.map(type => `<li class="type ${type}">${type}</li>`).join('')}
+            </ol>
+
+            <img src="${data.sprites.other.dream_world.front_default || data.sprites.front_default}" 
+                 alt="${data.name}" />
+            
+            <div class="pokemon-info">
+              <p><strong>Altura:</strong> ${(data.height / 10).toFixed(1)} m</p>
+              <p><strong>Peso:</strong> ${(data.weight / 10).toFixed(1)} kg</p>
+              <p><strong>Habilidades:</strong> ${data.abilities.map(a => a.ability.name).join(', ')}</p>
+              <p><strong>Experiência Base:</strong> ${data.base_experience}</p>
+            </div>
+          </div>
+        `;
+              
+        document.getElementById("pokemonDetailContent").innerHTML = html;
+      } catch (error) {
+        console.error('Erro:', error);
+        document.getElementById("pokemonDetailContent").innerHTML = 
+          '<h1>Erro ao carregar Pokémon</h1>';
+      }
+    }
+    
+    loadPokemonDetail();
+  </script>
+</body>
+</html>
